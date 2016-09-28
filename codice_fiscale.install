@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * @file
+ * Install/uninstall functions for Codice Fiscale.
+ */
+
+/**
+ * Implements hook_field_schema().
+ */
+function codice_fiscale_field_schema($field) {
+  // TODO: Implement advanced field type with name, dob, gender and place of
+  // birth fields.
+  if ($field['type'] == 'codice_fiscale_basic') {
+    return array(
+      'columns' => array(
+        'code' => array(
+          'type' => 'varchar',
+          'length' => 16,
+          'not null' => FALSE,
+        ),
+      ),
+      'indexes' => array(
+        'code' => array('code'),
+      ),
+    );
+  }
+}

@@ -1,0 +1,153 @@
+<?php
+
+/**
+ * @file
+ * Provides hooks and functions for Codice Fiscale.
+ */
+
+define('CODICE_FISCALE_VALID_CODE_PATTERN', '/^[A-Z]{6}[0-9]{2}[A-Z]{1}[0-9]{2}[A-Z]{1}[0-9]{3}[A-Z]{1}$/i');
+
+/**
+ * Implements hook_field_info().
+ */
+function codice_fiscale_field_info() {
+  // TODO: Implement advanced field type with name, dob, gender and place of
+  // birth fields.
+  return array(
+    'codice_fiscale_basic' => array(
+      'label' => t('Codice Fiscale'),
+      'description' => t('This field stores a codice fiscale and validates it.'),
+      'default_widget' => 'codice_fiscale_basic',
+      'default_formatter' => 'codice_fiscale',
+      'property_type' => 'text',
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function codice_fiscale_field_formatter_info() {
+  return array(
+    'codice_fiscale' => array(
+      'label' => t('Default. Just displays the codice fiscale number.'),
+      'field types' => array('codice_fiscale'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_widget_info().
+ */
+function codice_fiscale_field_widget_info() {
+  return array(
+    'codice_fiscale_basic' => array(
+      'label' => t('Codice Fiscale - Basic'),
+      'field types' => array('codice_fiscale_basic'),
+    ),
+    // TODO: Implement advanced field widget.
+  );
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function codice_fiscale_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  switch ($display['type']) {
+    // This formatter simply outputs the field as text.
+    case 'codice_fiscale':
+      foreach ($items as $delta => $item) {
+        $element[$delta] = array(
+          '#markup' => $item['code'],
+        );
+      }
+      break;
+  }
+  return $element;
+}
+
+/**
+ * Implements hook_field_widget_form().
+ */
+function codice_fiscale_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  $base = $element;
+
+  switch ($instance['widget']['type']) {
+    case 'codice_fiscale_basic':
+      $element['code'] = array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['code']) ? $items[$delta]['code'] : NULL,
+        '#size' => 16,
+        '#maxlength' => 16,
+        '#description' => t('Enter the codice fiscale without any spaces.'),
+        '#element_validate' => array('codice_fiscale_field_widget_element_validate'),
+      ) + $base;
+
+      break;
+
+    // TODO: Implement advanced field widget.
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_field_is_empty().
+ */
+function codice_fiscale_field_is_empty($item, $field) {
+  return empty($item['code']);
+}
+
+/**
+ * Implements hook_field_widget_error().
+ */
+function codice_fiscale_field_widget_error($element, $error, $form, &$form_state) {
+  form_error($element, $error['message']);
+}
+
+/**
+ * Custom validation callback for Codice Fiscale field widget.
+ *
+ * @param array $element
+ *   The widget element being validated.
+ * @param array $form_state
+ *   The state of the form the element is attached to.
+ *
+ * @see codice_fiscale_field_widget_form()
+ */
+function codice_fiscale_field_widget_element_validate($element, &$form_state) {
+  // Get the field info for this element.
+  $field_info = field_widget_field($element, $form_state);
+
+  // Ensure we have a value and validate it.
+  if (!empty($element['#value']) && !codice_fiscale_validate_code_from_field($element['#value'], $field_info['type'])) {
+    form_error($element, t('"%code" is not a valid fiscal code. Ensure you enter a 16 character value without spaces.', array('%code' => $element['#value'])));
+  }
+}
+
+/**
+ * Implements hook_field_presave().
+ */
+function codice_fiscale_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  foreach ($items as $delta => &$item) {
+    // Ensure the code is stored in upper case.
+    $item['code'] = strtoupper($item['code']);
+  }
+}
+
+/**
+ * Validate a potential codice fiscale code from a field.
+ *
+ * @param string $code
+ *   The codice fiscale value to validate.
+ * @param string $field_type
+ *   The type of field this code came from. This affects how it is validated.
+ *
+ * @return bool
+ *   Is the code valid.
+ */
+function codice_fiscale_validate_code_from_field($code, $field_type = 'codice_fiscale_basic') {
+  // TODO: Implement advanced validation based on field type.
+  return preg_match(CODICE_FISCALE_VALID_CODE_PATTERN, strtoupper($code));
+}

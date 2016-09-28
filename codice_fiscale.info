@@ -1,0 +1,6 @@
+name = Codice Fiscale
+description = Provides a field type for Codice Fiscale - The Italian tax code.
+package = Fields
+core = 7.x
+
+dependencies[] = field
